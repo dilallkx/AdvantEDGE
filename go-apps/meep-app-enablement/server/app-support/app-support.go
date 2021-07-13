@@ -37,7 +37,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const mappsupportBasePath = "mec_app_support/v1/"
+const module = "meep-app-enablement"
+const mappsupportBasePath = "mec_app_support/v1"
 const mappsupportKey = "as"
 const appEnablementKey = "app-enablement"
 const defaultMepName = "global"
@@ -98,9 +99,9 @@ func Init(globalMutex *sync.Mutex) (err error) {
 
 	// Set base path
 	if mepName == defaultMepName {
-		basePath = "/" + sandboxName + "/" + mappsupportBasePath
+		basePath = "/" + mappsupportBasePath
 	} else {
-		basePath = "/" + sandboxName + "/" + mepName + "/" + mappsupportBasePath
+		basePath = "/" + mepName + "/" + mappsupportBasePath
 	}
 
 	// Set base storage key
@@ -185,7 +186,7 @@ func applicationsConfirmReadyPOST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check if entry exist for the application in the DB
-	key := baseKey + ":app:" + appInstanceId + "info"
+	key := baseKey + ":app:" + appInstanceId + ":info"
 	fields, err := rc.GetEntry(key)
 	if err != nil || len(fields) == 0 {
 		log.Error("AppInstanceId does not exist, app is not running")
@@ -235,7 +236,7 @@ func applicationsConfirmTerminationPOST(w http.ResponseWriter, r *http.Request) 
 	appInstanceId := vars["appInstanceId"]
 
 	//check if entry exist for the application in the DB
-	key := baseKey + ":app:" + appInstanceId + "info"
+	key := baseKey + ":app:" + appInstanceId + ":info"
 	fields, err := rc.GetEntry(key)
 	if err != nil || len(fields) == 0 {
 		log.Error("AppInstanceId does not exist, app is not running")
@@ -354,7 +355,7 @@ func applicationsSubscriptionsPOST(w http.ResponseWriter, r *http.Request) {
 	appInstanceId := vars["appInstanceId"]
 
 	//check if entry exist for the application in the DB
-	key := baseKey + ":app:" + appInstanceId + "info"
+	key := baseKey + ":app:" + appInstanceId + ":info"
 	fields, err := rc.GetEntry(key)
 	if err != nil || len(fields) == 0 {
 		log.Error("AppInstanceId does not exist, app is not running")
@@ -402,7 +403,7 @@ func applicationsSubscriptionsPOST(w http.ResponseWriter, r *http.Request) {
 
 	link := new(Self)
 	self := new(LinkType)
-	self.Href = hostUrl.String() + basePath + "applications/" + appInstanceId + "/subscriptions/" + subsIdStr
+	self.Href = getBaseUrl(r) + "/applications/" + appInstanceId + "/subscriptions/" + subsIdStr
 	link.Self = self
 	subscription.Links = link
 
@@ -448,7 +449,7 @@ func applicationsSubscriptionGET(w http.ResponseWriter, r *http.Request) {
 	appInstanceId := vars["appInstanceId"]
 
 	//check if entry exist for the application in the DB
-	key := baseKey + ":app:" + appInstanceId + "info"
+	key := baseKey + ":app:" + appInstanceId + ":info"
 	fields, err := rc.GetEntry(key)
 	if err != nil || len(fields) == 0 {
 		log.Error("AppInstanceId does not exist, app is not running")
@@ -472,7 +473,7 @@ func applicationsSubscriptionDELETE(w http.ResponseWriter, r *http.Request) {
 	appInstanceId := vars["appInstanceId"]
 
 	//check if entry exist for the application in the DB
-	key := baseKey + ":app:" + appInstanceId + "info"
+	key := baseKey + ":app:" + appInstanceId + ":info"
 	fields, err := rc.GetEntry(key)
 	if err != nil || len(fields) == 0 {
 		log.Error("AppInstanceId does not exist, app is not running")
@@ -498,12 +499,11 @@ func applicationsSubscriptionDELETE(w http.ResponseWriter, r *http.Request) {
 
 func applicationsSubscriptionsGET(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
 	vars := mux.Vars(r)
 	appInstanceId := vars["appInstanceId"]
 
 	//check if entry exist for the application in the DB
-	key := baseKey + ":app:" + appInstanceId + "info"
+	key := baseKey + ":app:" + appInstanceId + ":info"
 	fields, err := rc.GetEntry(key)
 	if err != nil || len(fields) == 0 {
 		log.Error("AppInstanceId does not exist, app is not running")
@@ -515,7 +515,7 @@ func applicationsSubscriptionsGET(w http.ResponseWriter, r *http.Request) {
 
 	link := new(MecAppSuptApiSubscriptionLinkListLinks)
 	self := new(LinkType)
-	self.Href = hostUrl.String() + basePath + "applications/" + appInstanceId + "/subscriptions"
+	self.Href = getBaseUrl(r) + "/applications/" + appInstanceId + "/subscriptions"
 
 	link.Self = self
 	subscriptionLinkList.Links = link
@@ -544,4 +544,15 @@ func applicationsSubscriptionsGET(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, string(jsonResponse))
+}
+
+func getBaseUrl(r *http.Request) (url string) {
+	url = hostUrl.String() + "/" + sandboxName + basePath
+	// reqHost := r.Host
+	// if strings.Contains(reqHost, module) {
+	// 	url = "http://" + reqHost + basePath
+	// } else {
+	// 	url = "https://" + reqHost + "/" + sandboxName + basePath
+	// }
+	return url
 }

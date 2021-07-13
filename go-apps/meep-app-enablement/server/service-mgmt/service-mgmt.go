@@ -430,7 +430,7 @@ func registerService(appInstanceId string, sInfoPost *ServiceInfoPost) (*Service
 	serviceId := strconv.Itoa(newServiceId)
 
 	changeType := ServiceAvailabilityNotificationChangeType_ADDED
-	sInfo, err := updateServicePost(appInstanceId, sInfoPost, serviceId, false, &changeType)
+	sInfo, err := updateServicePost(appInstanceId, sInfoPost, serviceId, &changeType)
 	if err != nil {
 		nextServiceRegistrationIdAvailable--
 		return nil, err
@@ -439,15 +439,10 @@ func registerService(appInstanceId string, sInfoPost *ServiceInfoPost) (*Service
 	return sInfo, nil
 }
 
-func updateServicePost(appInstanceId string, sInfoPost *ServiceInfoPost, serviceId string, needMutex bool, changeType *ServiceAvailabilityNotificationChangeType) (*ServiceInfo, error) {
+func updateServicePost(appInstanceId string, sInfoPost *ServiceInfoPost, serviceId string, changeType *ServiceAvailabilityNotificationChangeType) (*ServiceInfo, error) {
 
 	if sInfoPost == nil {
 		return nil, errors.New("Service Info is null")
-	}
-
-	if needMutex {
-		mutex.Lock()
-		defer mutex.Unlock()
 	}
 
 	sInfo, err := createSInfoFromSInfoPost(sInfoPost, serviceId)
